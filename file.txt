@@ -1,0 +1,32 @@
+users(
+   "id ": Integer
+   "email" : string
+   "role" : string
+   "first_name" : string
+   "mobile_number" : Interger
+   "image_url" : String
+   "sales" : Integer
+)
+​
+products(
+   "id" : Integer
+   "name" : String
+   "category" : String
+   "price" : Interger
+   "quantity" : Integer
+   "description" : String
+   "image_url" : String
+)
+​
+categories(
+   "id" : Interger
+   "name" : String
+   "image_url" : String
+   "short_desc" : String
+)
+​
+sales(
+   "id" : Interger
+   "price" : String
+)
+​

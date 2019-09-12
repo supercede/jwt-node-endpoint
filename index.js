@@ -1,25 +1,17 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs');
+// const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const productsObj = require('./utils/functions');
 
-const numbers = require('./stuff');
+const users = require('./utils/users');
 
-const users = require('./users');
+let products = productsObj.loadProducts();
 
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
-// app.post('/numbers', (req, res) => {
-//     const newParam = {
-//         id: 1,
-//         num: req.body.num
-//     }
-//     numbers.push(newParam);
-//     res.send(numbers);
-// })
 
 app.post('/login', (req, res) => {
     if (isEmpty(req.body)) {
@@ -37,19 +29,16 @@ app.post('/login', (req, res) => {
 
     let validUser = users.find(user => user.name === newUser.name && user.password === newUser.password);
 
-    if (validUser.length < 1) {
+    if ( validUser == undefined || validUser.length < 1 ) {
         return res.send('user not found');
     } else {
-        // if (!validUser.admin) {
-        //     return res.send('user is not an admin');
-        // }
-        // return res.send('user is an admin');
-        const token = jwt.sign({ user: validUser }, 'secret_key', { expiresIn: '30s' });
-        res.send({ token });
+        if (validUser.role !== 'admin') {
+            return res.send('user is not an admin');
+        }else{
+            const token = jwt.sign({ user: validUser }, 'secret_key', { expiresIn: '1d' });
+            res.send({ token });
+        }
     }
-
-
-
 })
 
 
@@ -58,28 +47,26 @@ app.get('/', (req, res) => {
 })
 
 app.get('/products', (req, res) => {
-    res.send('okay');
+    res.send(products);
 })
 
 app.get('/products/:id', (req, res) => {
-    res.send('okay too');
+    const id = req.params.id;
+    const idProduct = products.find(product => product.id == id)
+    if(typeof idProduct == 'undefined'){
+        return res.send('product not found');
+    }
+    res.send(idProduct);
 })
 
-app.get('/sales', (req, res) => {
-    res.send('okay here');
-})
-
-app.get('/sales/:id', (req, res) => {
-    res.send('okay here');
-})
-
-app.post('/products', verifyToken, (req, res) => {
+app.get('/sales', verifyToken ,(req, res) => {
     jwt.verify(req.token, 'secret_key', (err, authData) => {
         if (err) {
-            res.sendStatus(403);
+            console.log(err)
+            // res.sendStatus(403);
         } else {
             res.send({
-                message: 'we Good!',
+                message: 'Here is sales',
                 authData
             });
         }
@@ -87,8 +74,63 @@ app.post('/products', verifyToken, (req, res) => {
 
 })
 
+app.get('/sales/:id', verifyToken ,(req, res) => {
+    // res.send('okay here');
+    jwt.verify(req.token, 'secret_key', (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            res.send({
+                message: 'Here is a sale!',
+                authData
+            });
+        }
+    })
+
+})
+
+app.post('/products', verifyToken, (req, res) => {
+    jwt.verify(req.token, 'secret_key', (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            const newProduct = {
+                id: products.length+1,
+                name: req.body.name || '',
+                category: req.body.category || '',
+                price: req.body.price || 0,
+                quantity: req.body.quantity || 1,
+                description: req.body.description || '',
+                image_url: req.body.image_url || ''
+            }
+
+            if(newProduct.name == '' || newProduct.price == 0 || newProduct.category == ''){
+                return res.send('name, price and category is required');
+            }
+
+            products.push(newProduct);
+            productsObj.saveProducts(products);
+            res.send(newProduct);
+        }
+    })
+
+})
+
 app.post('/sales', (req, res) => {
-    res.send('holla!');
+    // res.send('holla!');
+    const userName = req.body.name;
+    if(typeof userName == 'undefined'){
+        return res.send('Enter a name please')
+    }
+    const findName = users.find(name => name.name === userName);
+    if ( findName == undefined || findName.length < 1 ) {
+        return res.send('user does not exist');
+    }
+    if(findName.role !== 'admin'){
+        res.send('Ok!')
+    }else{
+        res.sendStatus(403);
+    }
 })
 
 
