@@ -28,3 +28,5 @@ to enable admin rights (add products, get sale order, etc)
 go to the route, select header, 
 under key, type 'Authorization' as value, type 'Bearer ' and then paste token and send;
 
+Only users(not admins) can add add a sale order, so to add sale order:
+create name and password in request body along with price
