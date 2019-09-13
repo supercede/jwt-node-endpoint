@@ -15,7 +15,24 @@ const saveProducts = products => {
     fs.writeFileSync("./utils/products.json", productsJSON);
 }
 
+const loadSales = () => {
+    try{
+        const data = fs.readFileSync('./utils/sales.json').toString();
+        const sales = JSON.parse(data);
+        return sales;
+    }catch(e){
+        return([]);
+    }
+}
+
+const saveSales = products => {
+    let salesJSON = JSON.stringify(products);
+    fs.writeFileSync("./utils/sales.json", salesJSON);
+}
+
 module.exports = {
     loadProducts,
-    saveProducts
+    saveProducts,
+    loadSales,
+    saveSales
 };

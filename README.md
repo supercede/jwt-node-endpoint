@@ -22,7 +22,7 @@ To start, run node index.js
 #to get admin auth:
 On Postman, go to http://localhost:3000/login 
 enter {"name": "admin", "password": "admin"}
-a token will be sent, copy this.
+if the login request is successful, a token is return in the body of the response, copy this.
 
 to enable admin rights (add products, get sale order, etc)
 go to the route, select header, 

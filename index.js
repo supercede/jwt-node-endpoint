@@ -7,6 +7,7 @@ const productsObj = require('./utils/functions');
 const users = require('./utils/users');
 
 let products = productsObj.loadProducts();
+let sales = productsObj.loadSales();
 
 
 const app = express();
@@ -29,15 +30,15 @@ app.post('/login', (req, res) => {
 
     let validUser = users.find(user => user.name === newUser.name && user.password === newUser.password);
 
-    if ( validUser == undefined || validUser.length < 1 ) {
+    if ( !validUser ) {
         return res.send('user not found');
     } else {
         if (validUser.role !== 'admin') {
             return res.send('user is not an admin');
-        }else{
-            const token = jwt.sign({ user: validUser }, 'secret_key', { expiresIn: '1d' });
-            res.send({ token });
         }
+        const token = jwt.sign({ user: validUser }, 'secret_key', { expiresIn: '3m' });
+        res.send({ token });
+        
     }
 })
 
@@ -62,13 +63,13 @@ app.get('/products/:id', (req, res) => {
 app.get('/sales', verifyToken ,(req, res) => {
     jwt.verify(req.token, 'secret_key', (err, authData) => {
         if (err) {
-            console.log(err)
-            // res.sendStatus(403);
+            if(err.name == 'TokenExpiredError'){
+                return res.send('Your token has expired, log in');
+            }
+            // console.log(err)
+            res.sendStatus(403);
         } else {
-            res.send({
-                message: 'Here is sales',
-                authData
-            });
+            res.send(sales);
         }
     })
 
@@ -78,12 +79,14 @@ app.get('/sales/:id', verifyToken ,(req, res) => {
     // res.send('okay here');
     jwt.verify(req.token, 'secret_key', (err, authData) => {
         if (err) {
+            if(err.name == 'TokenExpiredError'){
+                return res.send('Your token has expired, log in');
+            }
             res.sendStatus(403);
         } else {
-            res.send({
-                message: 'Here is a sale!',
-                authData
-            });
+            const id = req.params.id;
+            const idSale = sales.find(sale => sale.id = id);
+            res.send(idSale);
         }
     })
 
@@ -92,7 +95,7 @@ app.get('/sales/:id', verifyToken ,(req, res) => {
 app.post('/products', verifyToken, (req, res) => {
     jwt.verify(req.token, 'secret_key', (err, authData) => {
         if (err) {
-            res.sendStatus(403);
+            return res.sendStatus(403);
         } else {
             const newProduct = {
                 id: products.length+1,
@@ -119,15 +122,26 @@ app.post('/products', verifyToken, (req, res) => {
 app.post('/sales', (req, res) => {
     // res.send('holla!');
     const userName = req.body.name;
+    const password = req.body.password;
+
     if(typeof userName == 'undefined'){
         return res.send('Enter a name please')
     }
-    const findName = users.find(name => name.name === userName);
-    if ( findName == undefined || findName.length < 1 ) {
+    const findName = users.find(name => name.name === userName && name.password === password);
+    if ( !findName ) {
         return res.send('user does not exist');
     }
     if(findName.role !== 'admin'){
-        res.send('Ok!')
+        const newSale = {
+            id: sales.length + 1,
+            price: req.body.price
+        }
+        if(!req.body.price){
+            return res.send('Please enter a price');
+        }
+        sales.push(newSale);
+        productsObj.saveSales(sales);
+        res.send(sales);
     }else{
         res.sendStatus(403);
     }
