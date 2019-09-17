@@ -17,9 +17,9 @@ Using JWT to authenticate users as well as store attendants to restrict access t
 * POST /products : Create a product .
 * POST /sales:   Create a sale order
 
-#To start, 
-*Install dependencies with npm install
-*Type npm run start to run the app
+# To start, 
+* Install dependencies with npm install
+* Type npm run start to run the app
 
 * A product can accept the following properties: name, category, price, quantity, description, image_url
 * A sale can accpet only price parameter
